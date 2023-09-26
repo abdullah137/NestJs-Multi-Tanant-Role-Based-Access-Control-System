@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model Application {
+  id          String    @id  @default(cuid())
+  name        String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user       User?
+  role       Role?
+  usersToRoles UsersToRoles?
+}
+
+// Define your User model
+model User {
+  id            String       @id @default(cuid()) @map("id") // Map to "id" in the database
+  email         String       @unique
+  name          String
+  password      String
+  created_at    DateTime     @default(now()) @map("created_at")
+  updated_at    DateTime     @default(now()) @map("updated_at")
+  application   Application @relation(fields: [applicationId], references: [id])
+  applicationId String       @unique
+  
+  // Define the primary key constraint
+  @@map("users") // Map to "users" table in the database
+  @@index([email, applicationId], name: "users_email_applicationId_idx") // Create a composite index
+  @@index([id], name: "users_id_index") // Create a unique index on "id"
+
+  usersToRoles UsersToRoles?
+}
+
+model Role {
+  id            String     @id @default(cuid()) @map("id")
+  name          String     @map("name")
+  permissions   String[]  
+  created_at    DateTime   @default(now()) @map("created_at")
+  updated_at    DateTime   @default(now()) @map("updated_at")
+  
+  
+  application_id String    @unique
+  application   Application @relation(fields: [application_id], references: [id])
+  // Define the primary key constraint
+  @@map("roles") // Map to "roles" table in the database
+  @@index([name, application_id], name: "roles_name_applicationId_idx") // Create a unique composite index
+  @@unique([id], name: "roles_id_index") // Create a unique index on "id"
+
+  usersToRoles UsersToRoles?
+}
+
+model UsersToRoles {
+  applicationId String @unique
+  roledId String @unique
+  userId String @unique
+
+  @@id([applicationId, roledId, userId])
+  
+  // Define foreign keys
+  Application   Application @relation(fields: [applicationId], references: [id])
+  Role          Role        @relation(fields: [roledId], references: [id])
+  User          User        @relation(fields: [userId], references: [id])
+}
