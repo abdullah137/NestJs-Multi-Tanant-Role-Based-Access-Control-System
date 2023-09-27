@@ -1,10 +1,18 @@
-import { Controller, Post, Get } from '@nestjs/common';
+import { Controller, Body, Post, Get } from '@nestjs/common';
+import { ApplicationDto } from './dtos/applications.dto';
+import { ApplicationLogic } from './logic/application.logic';
 
 @Controller('applications')
 export class ApplicationsController {
-  @Post('')
-  createApplication() {}
+  constructor(private applicationLogic: ApplicationLogic) {}
 
-  @Get('')
-  getApplication() {}
+  @Post('create')
+  createApplication(@Body() dto: ApplicationDto) {
+    return this.applicationLogic.createApplication(dto);
+  }
+
+  @Get('get')
+  getApplication() {
+    return this.applicationLogic.getApplicationLogic();
+  }
 }
