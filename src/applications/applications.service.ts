@@ -12,10 +12,18 @@ export class ApplicationsService {
       const createApplication = await this.prisma.application.create({
         data: {
           name: payload.name,
-          roleId: 'adafad',
         },
       });
       return createApplication;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getApplications() {
+    try {
+      const applications = await this.prisma.application.findMany({});
+      return applications;
     } catch (error) {
       throw error;
     }
