@@ -12,14 +12,14 @@ datasource db {
 
 
 model Application {
-  id          String    @id  @default(cuid())
+  appId          String    @id  @default(cuid())
   name        String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  user       User?
-  role       Role?
-  usersToRoles UsersToRoles?
+  user       User[]
+  role       Role[]
+  usersToRoles UsersToRoles[]
 }
 
 // Define your User model
@@ -30,8 +30,8 @@ model User {
   password      String
   created_at    DateTime     @default(now()) @map("created_at")
   updated_at    DateTime     @default(now()) @map("updated_at")
-  application   Application @relation(fields: [applicationId], references: [id])
-  applicationId String       @unique
+  application   Application @relation(fields: [applicationId], references: [appId])
+  applicationId String      
   
   // Define the primary key constraint
   @@map("users") // Map to "users" table in the database
@@ -49,8 +49,8 @@ model Role {
   updated_at    DateTime   @default(now()) @map("updated_at")
   
   
-  application_id String    @unique
-  application   Application @relation(fields: [application_id], references: [id])
+  application_id String
+  application   Application? @relation(fields: [application_id], references: [appId])
   // Define the primary key constraint
   @@map("roles") // Map to "roles" table in the database
   @@index([name, application_id], name: "roles_name_applicationId_idx") // Create a unique composite index
@@ -67,7 +67,7 @@ model UsersToRoles {
   @@id([applicationId, roledId, userId])
   
   // Define foreign keys
-  Application   Application @relation(fields: [applicationId], references: [id])
+  Application   Application @relation(fields: [applicationId], references: [appId])
   Role          Role        @relation(fields: [roledId], references: [id])
   User          User        @relation(fields: [userId], references: [id])
 }
