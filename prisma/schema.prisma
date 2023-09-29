@@ -38,7 +38,7 @@ model User {
   @@index([email, applicationId], name: "users_email_applicationId_idx") // Create a composite index
   @@index([id], name: "users_id_index") // Create a unique index on "id"
 
-  usersToRoles UsersToRoles?
+  usersToRoles UsersToRoles[]
 }
 
 model Role {
@@ -56,13 +56,13 @@ model Role {
   @@index([name, application_id], name: "roles_name_applicationId_idx") // Create a unique composite index
   @@unique([id], name: "roles_id_index") // Create a unique index on "id"
 
-  usersToRoles UsersToRoles?
+  usersToRoles UsersToRoles[]
 }
 
 model UsersToRoles {
-  applicationId String @unique
-  roledId String @unique
-  userId String @unique
+  applicationId String
+  roledId String 
+  userId String
 
   @@id([applicationId, roledId, userId])
   
