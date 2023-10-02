@@ -8,9 +8,8 @@ import { User } from '@prisma/client';
 export class RolesLogic {
   constructor(private rolesService: RolesService) {}
 
-  async createRoles(payload: RolesDto, user: User) {
-    const applicationId = user.applicationId;
-    const { name, permisions } = payload;
+  async createRoles(payload: RolesDto) {
+    const { name, applicationId, permisions } = payload;
     const createRole = this.rolesService.createRole({
       name,
       permisions,
