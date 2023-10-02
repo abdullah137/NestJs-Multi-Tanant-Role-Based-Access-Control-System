@@ -21,6 +21,24 @@ export class RolesService {
     }
   }
 
+  async getRoles() {
+    try {
+      const roles = await this.prisma.role.findMany({});
+      return roles;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getRoleToUser() {
+    try {
+      const roles = await this.prisma.usersToRoles.findMany({});
+      return roles;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getRoleByName({
     name,
     applicationId,
@@ -33,6 +51,10 @@ export class RolesService {
         where: {
           name: name,
           application_id: applicationId,
+        },
+        include: {
+          application: true,
+          usersToRoles: true,
         },
       });
       return results[0];
