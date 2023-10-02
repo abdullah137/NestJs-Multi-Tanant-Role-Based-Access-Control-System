@@ -39,6 +39,10 @@ export class UserLoginDto {
   @IsString()
   @IsNotEmpty()
   password: string;
+
+  @IsString()
+  @IsNotEmpty()
+  applicationId: string;
 }
 
 export class AssignRoleToUserDto {
