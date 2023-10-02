@@ -63,4 +63,35 @@ export class UsersService {
       throw error;
     }
   }
+
+  async getUserByEmail({
+    email,
+    applicationId,
+  }: {
+    email: string;
+    applicationId: string;
+  }) {
+    try {
+      const users = await this.prisma.user.findMany({
+        where: {
+          email: email,
+          applicationId: applicationId,
+        },
+        include: {
+          usersToRoles: {
+            include: {
+              Role: {
+                select: {
+                  permissions: true,
+                },
+              },
+            },
+          },
+        },
+      });
+      return users;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
