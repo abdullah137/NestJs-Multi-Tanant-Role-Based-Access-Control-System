@@ -10,6 +10,7 @@ import { UserCreateDto, UserLoginDto } from '../dtos/user.dto';
 import * as argon from 'argon2';
 import { SYSTEM_ROLES } from '../../config/permissions';
 import { RolesService } from 'src/roles/roles.service';
+import { FormattedResult } from '../types/type.user';
 
 @Injectable()
 export class UserLogic {
@@ -60,6 +61,8 @@ export class UserLogic {
         name: roleName,
         applicationId: payload.applicationId,
       });
+
+      // if role not found
       if (!role) {
         throw new NotFoundException({
           error: 'ROLE_NOT_FOUND',
@@ -106,6 +109,39 @@ export class UserLogic {
       });
     }
 
+    // get user by email now
+    const getUser = await this.userService.getUserByEmail({
+      email: payload.email,
+      applicationId: payload.applicationId,
+    });
+
+    if (!getUser) {
+      throw new BadRequestException({
+        status: false,
+        message: "Sorry, you've entered an invalid password or email.",
+        error: 'LOGIN_FAILURE',
+      });
+    }
+
+    const formatResult = getUser.reduce((acc, curr) => {
+      if (!acc.id) {
+        return {
+          ...curr,
+          permissions: new Set(curr.usersToRoles[0].Role.permissions),
+        };
+      }
+
+      if (!curr.usersToRoles[0].Role.permissions) {
+        return acc;
+      }
+
+      for (const permissions of curr.usersToRoles[0].Role.permissions) {
+        acc.usersToRoles[0].Role.permissions.push(permissions);
+      }
+
+      return acc;
+    }, {} as Omit<(typeof getUser)[number], 'permissions'> & {});
+
     // compare password
     const passwordMatch = await argon.verify(user.password, payload.password);
 
@@ -116,20 +152,35 @@ export class UserLogic {
         error: 'LOGIN_FAILURE',
       });
     }
+
     return {
       message: "Congratulations! You've successfully logged in.",
       status: true,
-      token: await this.signToken(user.id, user.email),
+      data: {
+        ...formatResult,
+        permissions: Array.from(formatResult.usersToRoles[0].Role.permissions),
+      },
+      token: await this.signToken(
+        user.id,
+        user.email,
+        user.applicationId,
+        //@ts-ignore
+        Array.from(formatResult.permissions),
+      ),
     };
   }
 
   async signToken(
     userId: string,
     email: string,
+    applicationId: string,
+    scopes: Array<string>,
   ): Promise<{ access_token: string }> {
     const payload = {
       sub: userId,
       email,
+      applicationId,
+      scopes,
     };
 
     const secret = this.config.get('JWT_SECRET');
